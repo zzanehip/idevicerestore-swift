@@ -175,7 +175,7 @@ idevicerestore-idevicerestore.o: idevicerestore.c ../config.h \
   /usr/local/include/libimobiledevice/lockdown.h \
   /usr/local/include/libimobiledevice/libimobiledevice.h restore.h \
   /usr/local/include/libimobiledevice/restore.h download.h recovery.h \
-  limera1n.h locking.h \
+  libprerestore.h limera1n.h locking.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/fcntl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/fcntl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_o_sync.h \
@@ -554,6 +554,8 @@ restore.h:
 download.h:
 
 recovery.h:
+
+libprerestore.h:
 
 limera1n.h:
 

@@ -136,7 +136,7 @@ void debug_plist(plist_t plist);
 void print_progress_bar(double progress);
 int read_file(const char* filename, void** data, size_t* size);
 int write_file(const char* filename, const void* data, size_t size);
-
+void deca5_restore_text(const char* info);
 char *generate_guid(void);
 
 #ifdef WIN32

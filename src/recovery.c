@@ -34,6 +34,7 @@
 #include "img3.h"
 #include "restore.h"
 #include "recovery.h"
+#include "libprerestore.h"
 
 static int recovery_progress_callback(irecv_client_t client, const irecv_event_t* event) {
 	if (event->type == IRECV_PROGRESS) {
@@ -90,6 +91,10 @@ int recovery_client_new(struct idevicerestore_client_t* client) {
 		if (device_info && device_info->srnm) {
 			client->srnm = strdup(device_info->srnm);
 			info("INFO: device serial number is %s\n", client->srnm);
+			int size_text = snprintf(NULL, 0, "INFO: device serial number is %s", client->srnm);
+   			char * a = malloc(size_text + 1);
+    		sprintf(a, "INFO: device serial number is %s", client->srnm);
+			send_text(a);
 		}
 	}
 
@@ -260,6 +265,7 @@ int recovery_send_ticket(struct idevicerestore_client_t* client)
 	}
 
 	info("Sending APTicket (%d bytes)\n", size);
+	send_text("Sending APTicket");
 	irecv_error_t err = irecv_send_buffer(client->recovery->client, data, size, 0);
 	free(data);
 	if (err != IRECV_E_SUCCESS) {
@@ -312,7 +318,10 @@ int recovery_send_component(struct idevicerestore_client_t* client, plist_t buil
 	}
 
 	info("Sending %s (%d bytes)...\n", component, size);
-
+	int size_text = snprintf(NULL, 0, "Sending %s...", component);
+    char * a = malloc(size_text + 1);
+    sprintf(a, "Sending %s...", component);
+	send_text(a);
 	// FIXME: Did I do this right????
 	err = irecv_send_buffer(client->recovery->client, data, size, 0);
 	free(data);
@@ -358,7 +367,10 @@ int recovery_send_outside_component(struct idevicerestore_client_t* client, plis
 		return -1;
 	}	
 	info("Sending %s (%d bytes)...\n", component, size);
-
+	int size_text = snprintf(NULL, 0, "Sending %s...", component);
+    char * a = malloc(size_text + 1);
+    sprintf(a, "Sending %s...", component);
+	send_text(a);
 	// FIXME: Did I do this right????
 	err = irecv_send_buffer(client->recovery->client, data, size, 0);
 	free(data);

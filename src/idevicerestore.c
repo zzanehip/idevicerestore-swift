@@ -49,7 +49,7 @@
 #include "download.h"
 #include "recovery.h"
 #include "idevicerestore.h"
-
+#include "libprerestore.h"
 #include "limera1n.h"
 
 #include "locking.h"
@@ -619,6 +619,7 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 		}
 	} else {
 		info("Extracting BuildManifest from IPSW\n");
+		send_text("Extracting BuildManifest from IPSW");
 		if (ipsw_extract_build_manifest(client->ipsw, &buildmanifest, &tss_enabled) < 0) {
 			error("ERROR: Unable to extract BuildManifest from %s. Firmware file might be corrupt.\n", client->ipsw);
 			return -1;
@@ -948,11 +949,13 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 
 	/* check if all components we need are actually there */
 	info("Checking IPSW for required components...\n");
+	send_text("Checking IPSW for required components...");
 	if (build_identity_check_components_in_ipsw(build_identity, client->ipsw) < 0) {
 		error("ERROR: Could not find all required components in IPSW %s\n", client->ipsw);
 		return -1;
 	}
 	info("All required components found in IPSW\n");
+	send_text("All required components found in IPSW");
 
 	// Get filesystem name from build identity
 	char* fsname = NULL;
@@ -1004,6 +1007,7 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 		ipsw_get_file_size(client->ipsw, fsname, &fssize);
 		if ((fssize > 0) && ((uint64_t)st.st_size == fssize)) {
 			info("Using cached filesystem from '%s'\n", tmpf);
+			send_text("Using cached filesystem");
 			filesystem = strdup(tmpf);
 		}
 	}
@@ -1040,6 +1044,7 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 
 		// Extract filesystem from IPSW
 		info("Extracting filesystem from IPSW: %s\n", fsname);
+		send_text("Extracting filesystem from IPSW...");
 		if (ipsw_extract_to_file_with_progress(client->ipsw, fsname, filesystem, 1) < 0) {
 			error("ERROR: Unable to extract filesystem from IPSW\n");
 			if (client->tss)
@@ -1389,6 +1394,7 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 	if (client->mode->index != MODE_RESTORE) {
 		mutex_lock(&client->device_event_mutex);
 		info("Waiting for device to enter restore mode...\n");
+		send_text("Waiting for device to enter restore mode...");
 		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 180000);
 		if (client->mode != &idevicerestore_modes[MODE_RESTORE] || (client->flags & FLAG_QUIT)) {
 			mutex_unlock(&client->device_event_mutex);
@@ -1408,6 +1414,7 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 		}
 		client->ignore_device_add_events = 1;
 		info("About to restore device... \n");
+		send_text("About to restore device...");
 		result = restore_device(client, build_identity, filesystem);
 		if (result < 0) {
 			error("ERROR: Unable to restore device\n");
@@ -1594,6 +1601,12 @@ void plain_progress_cb(int step, double step_progress, void* userdata)
 	fflush(stdout);
 }
 
+void deca5_prog_cb(int step, double step_progress, void* userdata) {
+	send_progress((double)(step_progress * 100.0));
+}
+
+
+
 int deca5restore(char* ipsw_path, char* iBEC_path, char* devicetree_path, char* ramdisk_path, char* kernel_path) {
 	int ret = 0;
 	struct idevicerestore_client_t* client = idevicerestore_client_new();
@@ -1605,8 +1618,9 @@ int deca5restore(char* ipsw_path, char* iBEC_path, char* devicetree_path, char* 
 	client->ramdiskpath = strdup(ramdisk_path);
 	client->kernelpath = strdup(kernel_path);
 	client->ipsw = strdup(ipsw_path);
-	idevicerestore_set_progress_callback(client, plain_progress_cb, NULL);
+	idevicerestore_set_progress_callback(client, deca5_prog_cb, NULL);
 	ret = idevicerestore_start(client);
+	send_text((char*)"Restore Started");
 	if(ret != 0) {
 		printf("Major Error \n");
 		return -1;
@@ -2447,6 +2461,11 @@ int extract_outside_component(const char* ipsw, const char* path, unsigned char*
 		component_name = (char*) path;
 
 	info("Extracting %s...\n", component_name);
+	int size_text = snprintf(NULL, 0, "Extracting %s...", component_name);
+    char * a = malloc(size_text + 1);
+    sprintf(a, "Extracting %s...", component_name);
+	send_text(a);
+
 	if (ipsw_outside_file_extract_to_memory(ipsw, path, component_data, component_size, outside_path) < 0) {
 		error("ERROR: Unable to extract %s from %s\n", component_name, ipsw);
 		return -1;
@@ -2478,6 +2497,7 @@ int personalize_component(const char *component_name, const unsigned char* compo
 			}
 		} else {
 			info("Not personalizing component %s...\n", component_name);
+			send_text("Not personalizing component");
 			stitched_component = (unsigned char*)malloc(component_size);
 			if (stitched_component) {
 				stitched_component_size = component_size;

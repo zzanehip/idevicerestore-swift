@@ -140,8 +140,8 @@ idevicerestore-restore.o: restore.c ../config.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/12.0.0/include/inttypes.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/inttypes.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/time.h \
-  /usr/local/include/libirecovery.h idevicerestore.h asr.h fdr.h \
-  thread.h \
+  /usr/local/include/libirecovery.h libprerestore.h idevicerestore.h \
+  asr.h fdr.h thread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/pthread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/pthread/sched.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/pthread/pthread_impl.h \
@@ -441,6 +441,8 @@ idevicerestore-restore.o: restore.c ../config.h \
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/time.h:
 
 /usr/local/include/libirecovery.h:
+
+libprerestore.h:
 
 idevicerestore.h:
 

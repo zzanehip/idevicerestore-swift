@@ -127,10 +127,7 @@ AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-idevicerestore_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) -shared -fpic \
-	$(idevicerestore_CFLAGS) $(CFLAGS) $(idevicerestore_LDFLAGS) \
-	$(LDFLAGS) -o idevicerstore
+idevicerestore_LINK = echo "use libtool"
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false

@@ -32,7 +32,7 @@
 #include <libimobiledevice/restore.h>
 #include <zip.h>
 #include <libirecovery.h>
-
+#include "libprerestore.h"
 #include "idevicerestore.h"
 #include "asr.h"
 #include "fdr.h"
@@ -468,6 +468,7 @@ int restore_open_with_timeout(struct idevicerestore_client_t* client)
 	}
 
 	info("Connecting now...\n");
+	send_text("Connecting now...");
 	device_error = idevice_new(&device, client->udid);
 	if (device_error != IDEVICE_E_SUCCESS) {
 		return -1;
@@ -668,6 +669,7 @@ int restore_handle_progress_msg(struct idevicerestore_client_t* client, plist_t 
 	if ((progress > 0) && (progress <= 100)) {
 		if ((int)operation != lastop) {
 			info("%s (%d)\n", restore_progress_string(adapted_operation), (int)operation);
+			send_text(restore_progress_string(adapted_operation));
 		}
 		switch (adapted_operation) {
 		case VERIFY_RESTORE:
@@ -692,6 +694,7 @@ int restore_handle_progress_msg(struct idevicerestore_client_t* client, plist_t 
 		}
 	} else {
 		info("%s (%d)\n", restore_progress_string(adapted_operation), (int)operation);
+		send_text(restore_progress_string(adapted_operation));
 	}
 	lastop = (int)operation;
 
@@ -783,6 +786,7 @@ static int restore_handle_bb_update_status_msg(restored_client_t client, plist_t
 
 	if (done) {
 		info("Updating Baseband completed.\n");
+		send_text("Updating Baseband completed");
 		plist_t provisioning = plist_access_path(msg, 2, "Output", "provisioning");
 		if (provisioning && plist_get_node_type(provisioning) == PLIST_DICT) {
 			char* sval = NULL;
@@ -797,6 +801,7 @@ static int restore_handle_bb_update_status_msg(restored_client_t client, plist_t
 		}
 	} else {
 		info("Updating Baseband in progress...\n");
+		send_text("Updating Baseband in progress...");
 	}
 	result = 0;
 
@@ -816,34 +821,40 @@ int restore_send_filesystem(struct idevicerestore_client_t* client, idevice_t de
 	asr_client_t asr = NULL;
 
 	info("About to send filesystem...\n");
+	send_text("About to send filesystem...");
 
 	if (asr_open_with_timeout(device, &asr) < 0) {
 		error("ERROR: Unable to connect to ASR\n");
 		return -1;
 	}
 	info("Connected to ASR\n");
+	send_text("Connected to ASR...");
 
 	asr_set_progress_callback(asr, restore_asr_progress_cb, (void*)client);
 
 	// this step sends requested chunks of data from various offsets to asr so
 	// it can validate the filesystem before installing it
 	info("Validating the filesystem\n");
+	send_text("Validating the filesystem...");
 	if (asr_perform_validation(asr, filesystem) < 0) {
 		error("ERROR: ASR was unable to validate the filesystem\n");
 		asr_free(asr);
 		return -1;
 	}
 	info("Filesystem validated\n");
+	send_text("Filesystem validated");
 
 	// once the target filesystem has been validated, ASR then requests the
 	// entire filesystem to be sent.
 	info("Sending filesystem now...\n");
+	send_text("Sending filesystem now...");
 	if (asr_send_payload(asr, filesystem) < 0) {
 		error("ERROR: Unable to send payload to ASR\n");
 		asr_free(asr);
 		return -1;
 	}
 	info("Done sending filesystem\n");
+	send_text("Done sending filesystem");
 
 	asr_free(asr);
 	return 0;
@@ -855,6 +866,7 @@ int restore_send_root_ticket(restored_client_t restore, struct idevicerestore_cl
 	plist_t dict;
 
 	info("About to send RootTicket...\n");
+	send_text("About to send RootTicket...");
 
 	if (client->root_ticket) {
 		dict = plist_new_dict();
@@ -890,6 +902,7 @@ int restore_send_root_ticket(restored_client_t restore, struct idevicerestore_cl
 	}
 
 	info("Sending RootTicket now...\n");
+	send_text("Sending RootTicket now...");
 	restore_error = restored_send(restore, dict);
 	plist_free(dict);
 	if (restore_error != RESTORE_E_SUCCESS) {
@@ -898,6 +911,7 @@ int restore_send_root_ticket(restored_client_t restore, struct idevicerestore_cl
 	}
 
 	info("Done sending RootTicket\n");
+	send_text("Done sending RootTicket");
 	return 0;
 }
 
@@ -912,6 +926,10 @@ int restore_send_component(restored_client_t restore, struct idevicerestore_clie
 
 	info("About to send %s...\n", component);
 
+	int size_text = snprintf(NULL, 0, "About to send %s...", component);
+    char * a = malloc(size_text + 1);
+    sprintf(a, "About to send %s", component);
+	send_text(a);
 	if (client->tss) {
 		if (tss_response_get_path_by_entry(client->tss, component, &path) < 0) {
 			debug("NOTE: No path for component %s in TSS, will fetch from build identity\n", component);
@@ -950,6 +968,12 @@ int restore_send_component(restored_client_t restore, struct idevicerestore_clie
 	free(data);
 
 	info("Sending %s now...\n", component);
+
+	size_text = snprintf(NULL, 0, "Sending %s now...", component);
+    a = malloc(size_text + 1);
+    sprintf(a, "Sending %s now...", component);
+	send_text(a);
+
 	restore_error = restored_send(restore, dict);
 	plist_free(dict);
 	if (restore_error != RESTORE_E_SUCCESS) {
@@ -958,6 +982,12 @@ int restore_send_component(restored_client_t restore, struct idevicerestore_clie
 	}
 
 	info("Done sending %s\n", component);
+
+	size = snprintf(NULL, 0, "Done sending %s", component);
+    a = malloc(size + 1);
+    sprintf(a, "Done sending %s", component);
+	send_text(a);
+
 	return 0;
 }
 
@@ -983,6 +1013,7 @@ int restore_send_nor(restored_client_t restore, struct idevicerestore_client_t* 
 	uint32_t i;
 
 	info("About to send NORData...\n");
+	send_text("About to send NORdata");
 
 	if (client->tss) {
 		if (tss_response_get_path_by_entry(client->tss, "LLB", &llb_path) < 0) {
@@ -1007,6 +1038,8 @@ int restore_send_nor(restored_client_t restore, struct idevicerestore_client_t* 
 	memcpy(firmware_path, llb_path, (llb_filename - 1) - llb_path);
 	info("Found firmware path %s\n", firmware_path);
 
+	send_text("Found firmware path");
+
 	memset(manifest_file, '\0', sizeof(manifest_file));
 	snprintf(manifest_file, sizeof(manifest_file), "%s/manifest", firmware_path);
 
@@ -1029,6 +1062,7 @@ int restore_send_nor(restored_client_t restore, struct idevicerestore_client_t* 
 		free(manifest_data);
 	} else {
 		info("Getting firmware manifest from build identity\n");
+		send_text("Getting firmware manifest from build identity");
 		plist_dict_iter iter = NULL;
 		plist_t build_id_manifest = plist_dict_get_item(build_identity, "Manifest");
 		if (build_id_manifest) {
@@ -1301,6 +1335,7 @@ int restore_send_nor(restored_client_t restore, struct idevicerestore_client_t* 
 		debug_plist(dict);
 
 	info("Sending NORData now...\n");
+	send_text("Sending NORData now...");
 	if (restored_send(restore, dict) != RESTORE_E_SUCCESS) {
 		error("ERROR: Unable to send NORImageData data\n");
 		plist_free(dict);
@@ -1308,6 +1343,7 @@ int restore_send_nor(restored_client_t restore, struct idevicerestore_client_t* 
 	}
 
 	info("Done sending NORData\n");
+	send_text("Done sending NORData");
 	plist_free(dict);
 	return 0;
 }
@@ -1701,7 +1737,7 @@ static int restore_send_baseband_data(restored_client_t restore, struct idevicer
 	plist_t dict = NULL;
 
 	info("About to send BasebandData...\n");
-
+	send_text("About to send BasebandData...");
 	// NOTE: this function is called 2 or 3 times!
 
 	// setup request data
@@ -1767,6 +1803,7 @@ static int restore_send_baseband_data(restored_client_t restore, struct idevicer
 			debug_plist(request);
 
 		info("Sending Baseband TSS request...\n");
+		send_text("Sending Baseband TSS request...");
 		response = tss_request_send(request, client->tss_url);
 		plist_free(request);
 		plist_free(parameters);
@@ -1775,7 +1812,7 @@ static int restore_send_baseband_data(restored_client_t restore, struct idevicer
 			return -1;
 		}
 		info("Received Baseband SHSH blobs\n");
-
+		send_text("Received Baseband SHSH blobs");
 		if (idevicerestore_debug)
 			debug_plist(response);
 	}
@@ -1846,12 +1883,14 @@ static int restore_send_baseband_data(restored_client_t restore, struct idevicer
 	buffer = NULL;
 
 	info("Sending BasebandData now...\n");
+	send_text("Sending BasebandData now...");
 	if (restored_send(restore, dict) != RESTORE_E_SUCCESS) {
 		error("ERROR: Unable to send BasebandData data\n");
 		goto leave;
 	}
 
 	info("Done sending BasebandData\n");
+	send_text("Done sending BasebandData...");
 	res = 0;
 
 leave:
@@ -1872,13 +1911,14 @@ int restore_send_fdr_trust_data(restored_client_t restore, idevice_t device)
 	plist_t dict;
 
 	info("About to send FDR Trust data...\n");
-
+	send_text("About to send FDR Trust data...");
 	// FIXME: What should we send here?
 	/* Sending an empty dict makes it continue with FDR
 	 * and this is what iTunes seems to be doing too */
 	dict = plist_new_dict();
 
 	info("Sending FDR Trust data now...\n");
+	send_text("Sending FDR Trust data now...");
 	restore_error = restored_send(restore, dict);
 	plist_free(dict);
 	if (restore_error != RESTORE_E_SUCCESS) {
@@ -1887,7 +1927,7 @@ int restore_send_fdr_trust_data(restored_client_t restore, idevice_t device)
 	}
 
 	info("Done sending FDR Trust Data\n");
-
+	send_text("Done sending FDR Trust Data...");
 	return 0;
 }
 
@@ -1913,6 +1953,7 @@ static int restore_send_fud_data(restored_client_t restore, struct idevicerestor
 
 	if (!want_image_list && !image_name) {
 		info("About to send FUD data...\n");
+		send_text("About to send FUD data...");
 	}
 
 	if (want_image_list) {
@@ -2755,6 +2796,10 @@ int restore_device(struct idevicerestore_client_t* client, plist_t build_identit
 		return (err == -2) ? -1: -2;
 	}
 	info("Device %s has successfully entered restore mode\n", client->udid);
+	int size = snprintf(NULL, 0, "Device %s has successfully entered restore mode", client->udid);
+    char * a = malloc(size + 1);
+    sprintf(a, "Device %s has successfully entered restore mode", client->udid);
+	send_text(a);
 
 	restore = client->restore->client;
 	device = client->restore->device;
@@ -2827,6 +2872,7 @@ int restore_device(struct idevicerestore_client_t* client, plist_t build_identit
 
 	fdr_client_t fdr_control_channel = NULL;
 	info("Starting FDR listener thread\n");
+	send_text("Starting FDR listener thread");
 	if (!fdr_connect(device, FDR_CTRL, &fdr_control_channel)) {
 		if(thread_new(&fdr_thread, fdr_listener_thread, fdr_control_channel)) {
 			error("ERROR: Failed to start FDR listener thread\n");

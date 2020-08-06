@@ -71,6 +71,7 @@ void idevicerestore_set_flags(struct idevicerestore_client_t* client, int flags)
 void idevicerestore_set_ipsw(struct idevicerestore_client_t* client, const char* path);
 void idevicerestore_set_cache_path(struct idevicerestore_client_t* client, const char* path);
 void idevicerestore_set_progress_callback(struct idevicerestore_client_t* client, idevicerestore_progress_cb_t cbfunc, void* userdata);
+void deca5_prog_cb(int step, double step_progress, void* userdata);
 void idevicerestore_set_info_stream(FILE* strm);
 void idevicerestore_set_error_stream(FILE* strm);
 void idevicerestore_set_debug_stream(FILE* strm);

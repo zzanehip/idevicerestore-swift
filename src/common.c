@@ -35,7 +35,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <ctype.h>
-
+#include "libprerestore.h"
 #ifdef WIN32
 #include <windows.h>
 #include <conio.h>
@@ -78,6 +78,10 @@ static int info_disabled = 0;
 static int error_disabled = 0;
 static int debug_disabled = 0;
 
+static swift_callbacks callback;
+
+
+
 void info(const char* format, ...)
 {
 	if (info_disabled) return;
@@ -87,9 +91,24 @@ void info(const char* format, ...)
 	va_end(vargs);
 }
 
+void deca5_restore_text(const char* info) {
+	//
+}
+
 void error(const char* format, ...)
 {
 	va_list vargs, vargs2;
+    va_start(vargs, format);
+        // determine num of chars needed, don't store anything anywhere though!   
+	va_copy(vargs2, vargs);	   
+    size_t charsNeeded = vsnprintf(NULL, 0, format, vargs);
+    va_end(vargs);
+    va_start(vargs, format);
+	va_copy(vargs2, vargs);	                                            
+    char buf[charsNeeded];
+    vsprintf(buf, format, vargs);
+    va_end(vargs);
+	//callback.send_output_to_swift(buf);
 	va_start(vargs, format);
 	va_copy(vargs2, vargs);
 	vsnprintf(idevicerestore_err_buff, idevicerestore_err_buff_size, format, vargs);
