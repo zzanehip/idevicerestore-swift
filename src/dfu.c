@@ -31,11 +31,12 @@
 #include "tss.h"
 #include "recovery.h"
 #include "idevicerestore.h"
+#include "libprerestore.h"
 #include "common.h"
 
 static int dfu_progress_callback(irecv_client_t client, const irecv_event_t* event) {
 	if (event->type == IRECV_PROGRESS) {
-		print_progress_bar(event->progress);
+		send_progress(event->progress);
 	}
 	return 0;
 }
@@ -148,7 +149,7 @@ int dfu_send_buffer(struct idevicerestore_client_t* client, unsigned char* buffe
 	return 0;
 }
 
-int dfu_send_component(struct idevicerestore_client_t* client, plist_t build_identity, const char* component) {
+int dfu_send_component(struct idevicerestore_client_t* client, plist_t build_identity, const char* component, const char* outside_path) {
 	char* path = NULL;
 
 	if (client->tss) {
@@ -167,7 +168,7 @@ int dfu_send_component(struct idevicerestore_client_t* client, plist_t build_ide
 	unsigned char* component_data = NULL;
 	size_t component_size = 0;
 
-	if (extract_component(client->ipsw, path, &component_data, &component_size) < 0) {
+	if (extract_outside_component(client->ipsw, path, &component_data, &component_size, outside_path) < 0) {
 		error("ERROR: Unable to extract component: %s\n", component);
 		free(path);
 		return -1;
@@ -186,28 +187,32 @@ int dfu_send_component(struct idevicerestore_client_t* client, plist_t build_ide
 	free(component_data);
 	component_data = NULL;
 
-	if (!client->image4supported && client->build_major > 8 && !(client->flags & FLAG_CUSTOM) && !strcmp(component, "iBEC")) {
-		unsigned char* ticket = NULL;
-		unsigned int tsize = 0;
-		if (tss_response_get_ap_ticket(client->tss, &ticket, &tsize) < 0) {
-			error("ERROR: Unable to get ApTicket from TSS request\n");
-			return -1;
-		}
-		uint32_t fillsize = 0;
-		if (tsize % 64 != 0) {
-			fillsize = ((tsize / 64) + 1) * 64;
-		}
-		debug("ticket size = %d\nfillsize = %d\n", tsize, fillsize);
-		unsigned char* newdata = (unsigned char*)malloc(size + fillsize);
-		memcpy(newdata, ticket, tsize);
-		memset(newdata + tsize, '\xFF', fillsize - tsize);
-		memcpy(newdata + fillsize, data, size);
-		free(data);
-		data = newdata;
-		size += fillsize;
-	}
+    if (!client->image4supported && (client->build_major > 8) && !(client->flags & (FLAG_CUSTOM | FLAG_LATEST_SHSH)) && (strcmp(component, "iBEC") == 0)) {
+        unsigned char* ticket = NULL;
+        unsigned int tsize = 0;
+        if (tss_response_get_ap_ticket(client->tss, &ticket, &tsize) < 0) {
+            error("ERROR: Unable to get ApTicket from TSS request\n");
+            return -1;
+        }
+        uint32_t fillsize = 0;
+        if (tsize % 64 != 0) {
+            fillsize = ((tsize / 64) + 1) * 64;
+        }
+        debug("ticket size = %d\nfillsize = %d\n", tsize, fillsize);
+        unsigned char* newdata = (unsigned char*)malloc(size + fillsize);
+        memcpy(newdata, ticket, tsize);
+        memset(newdata + tsize, '\xFF', fillsize - tsize);
+        memcpy(newdata + fillsize, data, size);
+        free(data);
+        data = newdata;
+        size += fillsize;
+    }
 
 	info("Sending %s (%d bytes)...\n", component, size);
+	int size_text = snprintf(NULL, 0, "Sending %s", component);
+            char * a = malloc(size_text + 1);
+            sprintf(a, "Sending %s", component);
+            send_text(a);
 
 	// FIXME: Did I do this right????
 	irecv_error_t err = irecv_send_buffer(client->dfu->client, data, size, 1);
@@ -338,7 +343,7 @@ int dfu_enter_recovery(struct idevicerestore_client_t* client, plist_t build_ide
 
 	mutex_lock(&client->device_event_mutex);
 
-	if (dfu_send_component(client, build_identity, "iBSS") < 0) {
+	if (dfu_send_component(client, build_identity, "iBSS", client->ibsspath) < 0) {
 		error("ERROR: Unable to send iBSS to device\n");
 		irecv_close(client->dfu->client);
 		client->dfu->client = NULL;
@@ -417,7 +422,7 @@ int dfu_enter_recovery(struct idevicerestore_client_t* client, plist_t build_ide
 		mutex_lock(&client->device_event_mutex);
 
 		/* send iBEC */
-		if (dfu_send_component(client, build_identity, "iBEC") < 0) {
+		if (dfu_send_component(client, build_identity, "iBEC", client->ibecpath) < 0) {
 			mutex_unlock(&client->device_event_mutex);
 			error("ERROR: Unable to send iBEC to device\n");
 			irecv_close(client->dfu->client);

@@ -163,7 +163,7 @@ idevicerestore-ipsw.o: ipsw.c ../config.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/signal.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/time.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_timeval64.h \
-  json_plist.h
+  json_plist.h libprerestore.h
 
 ../config.h:
 
@@ -508,3 +508,5 @@ thread.h:
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_timeval64.h:
 
 json_plist.h:
+
+libprerestore.h:

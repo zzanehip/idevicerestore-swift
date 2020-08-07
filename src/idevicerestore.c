@@ -82,6 +82,7 @@ static struct option longopts[] = {
 	{ "devicetree-path", required_argument, NULL, 'D' },
 	{ "ramdisk-path", required_argument, NULL, 'S' },
 	{ "ibec-path", required_argument, NULL, 'B' },
+	{ "ibss-path", required_argument, NULL, 'Z' },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -332,11 +333,12 @@ int idevicerestore_start(struct idevicerestore_client_t* client)
 	// check which mode the device is currently in so we know where to start
 	mutex_lock(&client->device_event_mutex);
 	cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
-	if (client->mode == &idevicerestore_modes[MODE_UNKNOWN] || (client->flags & FLAG_QUIT)) {
-		mutex_unlock(&client->device_event_mutex);
-		error("ERROR: Unable to discover device mode. Please make sure a device is attached.\n");
-		return -1;
-	}
+    if (client->mode == &idevicerestore_modes[MODE_UNKNOWN] || (client->flags & FLAG_QUIT)
+        || (client->mode != &idevicerestore_modes[MODE_DFU] && client->mode != &idevicerestore_modes[MODE_RECOVERY] && (client->flags & FLAG_LATEST_SHSH))) {
+        mutex_unlock(&client->device_event_mutex);
+        error("ERROR: Unable to discover device mode. Please make sure a device is attached.\n");
+        return -1;
+    }
 	idevicerestore_progress(client, RESTORE_STEP_DETECT, 0.1);
 	info("Found device in %s mode\n", client->mode->string);
 	mutex_unlock(&client->device_event_mutex);
@@ -1607,12 +1609,13 @@ void deca5_prog_cb(int step, double step_progress, void* userdata) {
 
 
 
-int deca5restore(char* ipsw_path, char* iBEC_path, char* devicetree_path, char* ramdisk_path, char* kernel_path) {
+int deca5restore(char* ipsw_path, char* iBSS_path, char* iBEC_path, char* devicetree_path, char* ramdisk_path, char* kernel_path) {
 	int ret = 0;
 	struct idevicerestore_client_t* client = idevicerestore_client_new();
 	client->flags |= FLAG_ERASE;
 	client->flags |= FLAG_LATEST_SHSH;
 	client->flags &= ~FLAG_INTERACTIVE;
+	client->ibsspath = strdup(iBSS_path);
 	client->ibecpath = strdup(iBEC_path);
 	client->devicetreepath = strdup(devicetree_path);
 	client->ramdiskpath = strdup(ramdisk_path);
@@ -1620,7 +1623,6 @@ int deca5restore(char* ipsw_path, char* iBEC_path, char* devicetree_path, char* 
 	client->ipsw = strdup(ipsw_path);
 	idevicerestore_set_progress_callback(client, deca5_prog_cb, NULL);
 	ret = idevicerestore_start(client);
-	send_text((char*)"Restore Started");
 	if(ret != 0) {
 		printf("Major Error \n");
 		return -1;

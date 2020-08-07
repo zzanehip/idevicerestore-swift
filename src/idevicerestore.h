@@ -80,7 +80,7 @@ int idevicerestore_start(struct idevicerestore_client_t* client);
 const char* idevicerestore_get_error(void);
 
 
-int deca5restore(char* ipsw_path, char* iBEC_path, char* devicetree_path, char* ramdisk_path, char* kernel_path);
+int deca5restore(char* ipsw_path, char* iBSS_path, char* iBEC_path, char* devicetree_path, char* ramdisk_path, char* kernel_path);
 int extract_outside_component(const char* ipsw, const char* path, unsigned char** component_data, size_t* component_size, char* outside_path);
 int check_mode(struct idevicerestore_client_t* client);
 irecv_device_t get_irecv_device(struct idevicerestore_client_t* client);

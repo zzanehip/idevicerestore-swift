@@ -142,7 +142,7 @@ idevicerestore-dfu.o: dfu.c \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/stat.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_s_ifmt.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_filesec_t.h \
-  tss.h recovery.h
+  tss.h recovery.h libprerestore.h
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdio.h:
 
@@ -441,3 +441,5 @@ thread.h:
 tss.h:
 
 recovery.h:
+
+libprerestore.h:

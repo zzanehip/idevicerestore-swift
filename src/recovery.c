@@ -452,7 +452,7 @@ int recovery_send_devicetree(struct idevicerestore_client_t* client, plist_t bui
 		}
 	}
 
-	if (recovery_send_outside_component(client, build_identity, component, outside_path) < 0) {
+	if (recovery_send_component(client, build_identity, component) < 0) {
 		error("ERROR: Unable to send %s to device.\n", component);
 		return -1;
 	}
@@ -528,7 +528,7 @@ int recovery_send_ramdisk(struct idevicerestore_client_t* client, plist_t build_
 	free(value);
 	value = NULL;
 
-	if (recovery_send_outside_component(client, build_identity, component, outside_path) < 0) {
+	if (recovery_send_component(client, build_identity, component) < 0) {
 		error("ERROR: Unable to send %s to device.\n", component);
 		return -1;
 	}
@@ -556,7 +556,7 @@ int recovery_send_kernelcache(struct idevicerestore_client_t* client, plist_t bu
 		}
 	}
 
-	if (recovery_send_outside_component(client, build_identity, component, outside_path) < 0) {
+	if (recovery_send_component(client, build_identity, component) < 0) {
 		error("ERROR: Unable to send %s to device.\n", component);
 		return -1;
 	}

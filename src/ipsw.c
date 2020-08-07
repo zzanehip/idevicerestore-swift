@@ -40,7 +40,7 @@
 #include "common.h"
 #include "idevicerestore.h"
 #include "json_plist.h"
-
+#include "libprerestore.h"
 #define BUFSIZE 0x100000
 
 typedef struct
@@ -244,7 +244,7 @@ int ipsw_extract_to_file_with_progress(const char *ipsw, const char *infile, con
 			if (print_progress)
 			{
 				progress = ((double)bytes / (double)zstat.size) * 100.0;
-				print_progress_bar(progress);
+				send_progress(progress);
 			}
 		}
 		free(buffer);

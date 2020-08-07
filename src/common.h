@@ -96,6 +96,7 @@ struct idevicerestore_client_t {
 	char* devicetreepath;
 	char* ramdiskpath;
 	char* ibecpath;
+	char* ibsspath;
 	char* srnm;
 	char* ipsw;
 	const char* filesystem;
