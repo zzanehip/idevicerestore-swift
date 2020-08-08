@@ -241,7 +241,7 @@ int recovery_enter_restore(struct idevicerestore_client_t* client, plist_t build
 		return -1;
 	}
 
-	if(!(client->flags & FLAG_BOOT)) {
+	if(client->flags & FLAG_BOOT) {
 		return 0;
 	}
 

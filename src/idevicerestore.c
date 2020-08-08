@@ -2098,7 +2098,7 @@ int idevicerestore_booter(struct idevicerestore_client_t *client)
 	else
 	{
 		info("Extracting BuildManifest from IPSW\n");
-		send_text("Extracting BuildManifest from IPSW");
+		send_text("Extracted device info");
 		if (ipsw_extract_outside_build_manifest(client->ipsw, &buildmanifest, &tss_enabled, client->bmpath) < 0)
 		{
 			error("ERROR: Unable to extract BuildManifest from %s. Firmware file might be corrupt.\n", client->ipsw);
@@ -3382,7 +3382,7 @@ int deca5boot(char *iBSS_path, char *iBEC_path, char *devicetree_path, char *ram
 	client->kernelpath = strdup(kernel_path);
 	client->bmpath = strdup(bm_path);
 	client->logo_path = strdup(logo_path);
-	client->ipsw = "file://";
+	client->ipsw = "";
 	idevicerestore_set_progress_callback(client, deca5_prog_cb, NULL);
 	ret = idevicerestore_booter(client);
 	if (ret != 0)
