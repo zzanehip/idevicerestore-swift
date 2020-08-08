@@ -41,6 +41,7 @@ int ipsw_outside_file_extract_to_memory(const char* ipsw, const char* infile, un
 int ipsw_extract_build_manifest(const char* ipsw, plist_t* buildmanifest, int *tss_enabled);
 int ipsw_extract_restore_plist(const char* ipsw, plist_t* restore_plist);
 
+int ipsw_extract_outside_build_manifest(const char *ipsw, plist_t *buildmanifest, int *tss_enabled, char *bm_path);
 int ipsw_get_signed_firmwares(const char* product, plist_t* firmwares);
 int ipsw_download_fw(const char *fwurl, unsigned char* isha1, const char* todir, char** ipswfile);
 

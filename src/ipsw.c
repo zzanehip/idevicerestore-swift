@@ -583,6 +583,39 @@ int ipsw_extract_build_manifest(const char *ipsw, plist_t *buildmanifest, int *t
 	return -1;
 }
 
+int ipsw_extract_outside_build_manifest(const char *ipsw, plist_t *buildmanifest, int *tss_enabled, char *bm_path)
+{
+	size_t size = 0;
+	unsigned char *data = NULL;
+
+	*tss_enabled = 0;
+
+	/* older devices don't require personalized firmwares and use a BuildManifesto.plist */
+	if (ipsw_file_exists(ipsw, "BuildManifesto.plist"))
+	{
+		if (ipsw_extract_to_memory(ipsw, "BuildManifesto.plist", &data, &size) == 0)
+		{
+			plist_from_xml((char *)data, size, buildmanifest);
+			free(data);
+			return 0;
+		}
+	}
+
+	data = NULL;
+	size = 0;
+
+	/* whereas newer devices do not require personalized firmwares and use a BuildManifest.plist */
+	if (ipsw_outside_file_extract_to_memory(ipsw, "BuildManifest.plist", &data, &size, bm_path) == 0)
+	{
+		*tss_enabled = 1;
+		plist_from_xml((char *)data, size, buildmanifest);
+		free(data);
+		return 0;
+	}
+
+	return -1;
+}
+
 int ipsw_extract_restore_plist(const char *ipsw, plist_t *restore_plist)
 {
 	size_t size = 0;
