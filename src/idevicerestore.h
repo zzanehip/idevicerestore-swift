@@ -47,6 +47,7 @@ extern "C" {
 #define FLAG_NO_RESTORE      (1 << 11)
 #define FLAG_LATEST_SHSH      (1 << 12)
 #define FLAG_BOOT     (1 << 13)
+#define FLAG_JAILBREAK     (1 << 14)
 struct idevicerestore_client_t;
 
 enum {
@@ -82,6 +83,7 @@ int idevicerestore_booter(struct idevicerestore_client_t *client);
 int deca5restore(char* ipsw_path, char* iBSS_path, char* iBEC_path, char* devicetree_path, char* ramdisk_path, char* kernel_path, char *logo_path);
 int extract_outside_component(const char* ipsw, const char* path, unsigned char** component_data, size_t* component_size, char* outside_path);
 int deca5boot(char *iBSS_path, char *iBEC_path, char *devicetree_path, char *ramdisk_path, char *kernel_path, char *bm_path, char *logo_path);
+int deca5jailbreak(char *iBSS_path, char *iBEC_path, char *devicetree_path, char *ramdisk_path, char *kernel_path, char *bm_path, char *logo_path);
 int check_mode(struct idevicerestore_client_t* client);
 irecv_device_t get_irecv_device(struct idevicerestore_client_t* client);
 int get_ecid(struct idevicerestore_client_t* client, uint64_t* ecid);

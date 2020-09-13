@@ -3394,6 +3394,37 @@ int deca5boot(char *iBSS_path, char *iBEC_path, char *devicetree_path, char *ram
 	return 0;
 }
 
+int deca5jailbreak(char *iBSS_path, char *iBEC_path, char *devicetree_path, char *ramdisk_path, char *kernel_path, char *bm_path, char *logo_path)
+{
+	int ret = 0;
+	struct idevicerestore_client_t *client = idevicerestore_client_new();
+	client->flags |= FLAG_ERASE;
+	client->flags |= FLAG_JAILBREAK;
+	client->flags |= FLAG_BOOT;
+	client->flags |= FLAG_NO_RESTORE;
+	client->flags |= FLAG_LATEST_SHSH;
+	client->flags &= ~FLAG_INTERACTIVE;
+	client->ibsspath = strdup(iBSS_path);
+	client->ibecpath = strdup(iBEC_path);
+	client->devicetreepath = strdup(devicetree_path);
+	client->ramdiskpath = strdup(ramdisk_path);
+	client->kernelpath = strdup(kernel_path);
+	client->bmpath = strdup(bm_path);
+	client->logo_path = strdup(logo_path);
+	client->ipsw = "";
+	idevicerestore_set_progress_callback(client, deca5_prog_cb, NULL);
+	ret = idevicerestore_booter(client);
+	if (ret != 0)
+	{
+		printf("Major Error \n");
+		return -1;
+	}
+	idevicerestore_client_free(client);
+	return 0;
+}
+
+
+
 // int main(int argc, char* argv[]) {
 // 	int opt = 0;
 // 	int optindex = 0;
